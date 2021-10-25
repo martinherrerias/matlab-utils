@@ -1,16 +1,18 @@
 classdef optwaitbar < handle
 % OPTWAITBAR - class designed to wrap MATLAB's WAITBAR with added functionality:
 %
-%   + Command-line updates, of the form '#WAITBAR:(0.00%) MSG' for non-UI environments
+%   + Command-line updates, of the form '#WAITBAR:(0.00%) MSG' for non-graphical environments
 %   + Integrated clock (STOPWATCH object) to provide automatic ETA estimates & messages
 %   + Automatic closing of WAITBAR figure upon deletion of the wrapper OPTWAITBAR object
 %
 % The constructor is designed to take the same syntax as WAITBAR, but returns an OPTWAITBAR 
-% object handle with the actual WAITBAR's handle (if running on UI mode) in OBJ.ID. Updates
+% object handle with the actual WAITBAR's handle (if running on display mode) in OBJ.ID. Updates
 % to an existing waitbar of the form OPTWAITBAR(X,H,..) where H is an OPTWAITBAR object
-% work too. The only detail is that the constructor's output (H) cannot be optional, and tends
-% to stay in the working space as ANS, potentially messing up automatic figure closure. Use of
-% H.UPDATE(X,MSG,..) is therefore recommended.
+% work too. 
+%
+%   NOTE: the constructor's output (H) cannot be optional, and tends to stay in the working space
+%   as ANS, potentially messing up automatic figure closure. Use of H.UPDATE(X,MSG,..) is therefore
+%   recommended.
 %
 % EXAMPLE:
 %     h = optwaitbar(0,'starting...');   
@@ -53,7 +55,7 @@ methods (Static = true)
     function obj = loadobj(obj,varargin)
     % Create transient propperties
 
-        obj.isUI = runningfromUI();
+        [~,obj.isUI] = runningfromUI();
         obj.clock = stopwatch();
 
         if obj.isUI
