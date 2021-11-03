@@ -169,8 +169,8 @@ methods
     end
     
     function n = numArgumentsFromSubscript(obj,s,indexingContext)
-        if isprop(obj,s(1).subs) && numel(s) > 1 && contains(s(2).type,'{}')
-            % && ~strcmp(s(1).subs,'data') 
+        if isprop(obj,s(1).subs) && numel(s) > 1 && contains(s(2).type,'{}') ...
+             && ~strcmp(s(1).subs,'data') 
             
             if isnumeric(s(end).subs{1}), n = numel(s(2).subs{1});
             elseif isequal(s(end).subs,{':'}), n = numel(builtin('subsref',obj,s(1)));
