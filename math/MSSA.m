@@ -294,13 +294,11 @@ function [Xr,Sx,RC,L,opt] = MSSA(X,varargin)
                 ink = (c == k);
                 if ~any(ink), continue; end   
 
-                ij = s.i(:)' + r(ink);
+                ij = s.i(:) + r(ink)';
                 ok = ij > 0 & ij <= N;                
-                ij = ij + (s.j(:)'-1)*N;
-                
-                % vv = repmat(s.v{k}(:)',size(ij,1),1)*Se(k);
-                vv = repmat(s.v{k}(:)',size(ij,1),1).*Sx(missing(:,k));
-            
+                ij = ij + (s.j(:)-1)*N;       
+                vv = s.v{k}(:).*Sx(missing(:,k))';
+
                 Sa(:) = Sa(:) + accumarray(ij(ok),vv(ok),[N*D,1],@sum);
             end
             % Sx = Sa + Sr + Se;

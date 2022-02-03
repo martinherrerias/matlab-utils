@@ -15,7 +15,7 @@ function ButtonName = optquestdlg(varargin)
     [interactive,hasdisplay] = runningfromUI();
     if hasdisplay
         ButtonName = questdlg(varargin{:});
-        fprintf([LBL ' ' question ' - ' ButtonName newline()]);
+        fprintf('%s %s - %s\n',LBL,question,ButtonName);
     elseif interactive
         ButtonName = CLIquestion([LBL ' ' question],varargin{:});       
     else
