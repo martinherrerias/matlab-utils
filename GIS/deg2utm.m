@@ -167,7 +167,7 @@ function  [x,y,zone,letter] = deg2utm(Lat,Lon,varargin)
     [lat_0,lon_0,x_0,y_0,k_0] = compatiblesize(lat_0,lon_0,x_0,y_0,k_0);
     
     if ~opt.multizone && ~isscalar(lat_0)
-        x = num2cell(mode([lat_0,lon_0,x_0,y_0,k_0],1)); 
+        x = cellfun(@mode,{lat_0(:),lon_0(:),x_0(:),y_0(:),k_0(:)},'unif',0); 
         [lat_0,lon_0,x_0,y_0,k_0] = deal(x{:});
     end
 
