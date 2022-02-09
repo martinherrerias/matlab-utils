@@ -174,7 +174,9 @@ function [x,V,g] = fitinterpolant(F,x,t,G,E)
         sz = size(varargin{1});
         type = class(V);
         for j = 1:numel(varargin)
-            varargin{j} = typecast(varargin{j},type);
+            if ~strcmp(class(varargin{j}),type)
+                varargin{j} = cast(varargin{j},type);
+            end
         end
         g = G(x{:},V,varargin{:});
         g = reshape(g,sz);
