@@ -16,8 +16,10 @@ function varargout = packedfcn(fcnfile,varargin)
 % PACKEDFCN(FILE,'-backup') - include autosave-crash-resume functionality. For this to work, fcn
 %    must recognize the name-value pair ..,'backup',X. Specifically the calls:
 %
-%       fcn(args{:},'backup',FILE~) - where FILE~ is the name of a backup file to use
-%       fcn('backup',S) - where S = load(FILE~,'-mat') contains the contents of an interrupted run
+%       fcn(args{:},'backup',FILE~) - where FILE~ is the name of a backup file to use.
+%       fcn(args{:},'backup',S) - where S = load(FILE~,'-mat') is a dump from an interrupted 
+%           previous run (writing of these dump files periodically or on crash should be handled
+%           by the called fcn, when called using the syntax fcn(args{:},'backup',FILE~).
 %
 %   On a fresh run (first syntax), fcn is informed that is should start dumping any provisional 
 %   results into a MAT file named FILE~. On a recovery run (i.e. if PACKEDFCN finds an existing
@@ -55,6 +57,9 @@ function varargout = packedfcn(fcnfile,varargin)
 %     fprintf('The answer to life, the universe, and everything else: %d\n',F.res)
 %
 % See also: RUNPARALLEL, PARALLELCONFIG
+%
+% TODO: functions should handle their own backup/restore functionality (i.e. search for compatible
+%   backup files) all PACKEDFCN should do is include the appropriate 'backup',FILE~ argument pair.
 
     global SimOptions
     % VARNAMES = args, fcn, opt, res - just check against RUNPARALLEL
@@ -134,7 +139,7 @@ function varargout = packedfcn(fcnfile,varargin)
         end
 
         if opt.backup
-            F.args = [F.args(:)',{'backup',backupfile}];
+            F.args = [F.args(:)',{'backup',backupfile}]; %(§)
         end
             
         if ~opt.backup || ~isfile(backupfile)
@@ -147,8 +152,9 @@ function varargout = packedfcn(fcnfile,varargin)
             fprintf('Attempting to resume interrupted calculation from:\n\t%s\n',backupfile);
             try
             % Attempt to read SUBFILE~ (backup) and resume from contents
-                B = load(backupfile,'-mat');  
-                F.res = F.fcn('backup',B);
+                B = load(backupfile,'-mat');
+                F.args{end} = B; %(§) use 'backup',B
+                F.res = F.fcn(F.args{:});
             catch ERR
             % If this fails...
                 fprintf('... resume failed: %s\n', getReport(ERR)); 
