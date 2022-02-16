@@ -55,7 +55,11 @@ methods (Static = true)
     function obj = loadobj(obj,varargin)
     % Create transient propperties
 
-        [~,obj.isUI] = runningfromUI();
+        if isempty(obj.isUI)
+            [~,obj.isUI] = runningfromUI();
+        else
+            validateattributes(obj.isUI,{'numeric','logical'},{'scalar','binary'});
+        end
         obj.clock = stopwatch();
 
         if obj.isUI
@@ -102,6 +106,9 @@ methods
             return;
         else
         % Create a new object...
+            [opt,varargin] = getpairedoptions(varargin,{'UI'},{[]});
+        
+            obj.isUI = opt.UI;
             obj.msg = '';
             obj.progress = x;
             obj.eta = NaN;
@@ -143,6 +150,8 @@ methods
     %
     % See also: OPTWAITBAR
     
+        validateattributes(x,'numeric',{'scalar','real','nonnegative','<=',1});
+    
         [opt,varargin] = getflagoptions(varargin,{'-addtime','-worthy'});
         opt.TAG = [];
         opt.LEASTWAIT = [];
@@ -163,6 +172,12 @@ methods
 
         if dy > 0
         % Estimate remaining time based on the current slope m, and all its past records
+        
+            if obj.memory.n == 1 && abs(log10((obj.memory.Sx/obj.memory.n)/m)) > 1
+                obj.memory.Sx = 0;
+                obj.memory.Sxx = 0;
+                obj.memory.n = 0;
+            end
 
             % Update sums and moments Sx = sum(m), and Sxx = sum(m²), 
             obj.memory.Sx = obj.memory.Sx + m;

@@ -9,8 +9,11 @@ function [interactive,graphic,version] = runningfromUI()
 %
 % See also: SPLITGUI, SPLITSCRIPT, GETSIMOPTION
 
-    VERSIONS = {'GUI','batch','CLI'}; % 'API'?
-    ISINTERACTIVE = [1,0,1];
+    VERSIONS = {'GUI', {'GUI','UI'};
+                'CLI', {'CLI'};
+                'batch', {'batch','parallel'}}; 
+                % 'API'?
+    ISINTERACTIVE = [1,1,0];
     ISGRAPHIC = [1,0,0];
 
     % Get version from SimOptions
