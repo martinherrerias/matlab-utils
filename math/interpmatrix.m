@@ -207,11 +207,23 @@ function [W,e] = spherical(P,Q,maxarc,tol)
     T(~any(T > Nv,2),:) = [];        % remove tetrahedra without origin
     T = sort(T,2);                   % sort so that last vertex for each facet is origin
     T = triangulation(T,R*P);
-    [tid,B] = pointLocation(T,Q);    % get interpolation weights as barycentric coords.
-    B(:,4) = [];                     % remove weight of last point (origin)
-    B = B*R;                         % ... and renormalize
-    % B = B./sum(B,2);                 
+    
+    % [tid,B] = pointLocation(T,Q);    % get interpolation weights as barycentric coords.
+    % B(:,4) = [];                     % remove weight of last point (origin)
+    % B = B*R;                         % ... and renormalize
 
+    % PROVISIONAL?: pointLocation scales badly for large Nq: For a dense triangulation, chances
+    %  are most points will lie in a triangle enclosed by their closest neighbors...
+    [tid,B] = in_nearest_triangle(Q,P(1:end-1,:),T.ConnectivityList(:,1:3));
+
+    valid = ~isnan(tid);
+    if any(~valid)
+    % ... call pointLocation only for the exceptions
+        [tid(~valid),b] = pointLocation(T,Q(~valid,:));
+        B(~valid,:) = b(:,1:3)*R;  
+    end
+
+    % B = B./sum(B,2);                 
     valid = ~isnan(tid);             % query points inside the alpha-shape
 
     if ~isempty(maxarc)
@@ -253,4 +265,45 @@ function [W,e] = spherical(P,Q,maxarc,tol)
 
     W = sparse(i,j,w,Nq,Nv);
     e = ~valid;
+end
+
+function [tid,B] = in_nearest_triangle(Q,P,T)
+% See if the triangle formed by the three nearest-neighbors of Q is part of the spherical 
+%   triangulation T, if so, get Q's barycentric coordinates in terms of that triangle, and 
+%   check that Q is inside.
+%
+% FUTURE: check other, neighboring triangles?
+
+    idx = knnsearch(P,Q,'K',3,'distance','cosine');
+    [easy,tid] = ismember(sort(idx,2),T,'rows');
+    T = T(tid(easy,:),1:3);
+    B = zeros(size(Q,1),3);
+    B(easy,:) = sphbarycoords(Q(easy,:),P(T(:,1),:),P(T(:,2),:),P(T(:,3),:));
+    really_easy = all(B(easy,:) >= 0,2);
+    easy(easy) = really_easy;
+    tid(~easy) = NaN;
+    B(~easy,:) = NaN;
+end
+
+function B = sphbarycoords(q,p1,p2,p3)
+% Spherical barycentric coordinates for point(s) q in triangle(s) p1-p2-p3.
+% From:
+% Lei, K., Qi, D., Tian, X., 2020. A New Coordinate System for Constructing Spherical Grid Systems. 
+% Applied Sciences 10, 655. https://doi.org/10.3390/app10020655
+
+    dotq1 = dot(q,p1,2);
+    dotq2 = dot(q,p2,2);
+    dotq3 = dot(q,p3,2);
+
+    dot12 = dot(p1,p2,2);
+    dot23 = dot(p2,p3,2);
+    dot13 = dot(p1,p3,2);
+    x23 = cross(p2,p3,2);
+    x31 = cross(p3,p1,2);
+    x12 = cross(p1,p2,2);
+
+    S = atan2(dot(p1,x23,2),1 + dot12 + dot23 + dot13);
+    B(:,1) = atan2(dot(q,x23,2),1 + dotq2 + dot23 + dotq3)./S;
+    B(:,2) = atan2(dot(q,x31,2),1 + dotq3 + dot13 + dotq1)./S;
+    B(:,3) = atan2(dot(q,x12,2),1 + dotq1 + dot12 + dotq2)./S;
 end
