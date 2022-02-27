@@ -33,13 +33,13 @@ function varargout = synchronizestruct(varargin)
     x = -arrayfun(@(t) offset(t{1},dt,opt.offset),t); % units of new dt
     [T,t] = arrayfun(@resample,T,idx,t,m,x,'unif',0);
     
-    [t,idx{1},idx{2}] = intersect(t{1},t{2});
+    [tc,idx{1},idx{2}] = intersect(t{1},t{2});
     for j = 3:numel(T)
-        if isempty(t)
+        if isempty(tc)
             idx{j} = [];
             continue;
         end
-        [t,iA,idx{j}] = intersect(t,T{j}.Properties.RowTimes);
+        [tc,iA,idx{j}] = intersect(tc,t{j});
         idx(1:j-1) = cellfun(@(x) x(iA),idx(1:j-1),'unif',0);
     end
 
@@ -47,9 +47,10 @@ function varargout = synchronizestruct(varargin)
     for j = 1:nargout
         if isa(T{j},'MeteoData')
             varargout{j} = filterstructure(T{j},idx{j},T{j}.Nt);
+            varargout{j}.data.Properties.RowTimes = tc;
         else
             varargout{j} = T{j}(idx{j},:);
-            varargout{j}.Properties.RowTimes = t;
+            varargout{j}.Properties.RowTimes = tc;
         end
         if isempty(c{j}), continue; end
         varargout{j} = c{j}(varargout{j}); % convert back non-table outputs
