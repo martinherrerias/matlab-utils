@@ -115,12 +115,35 @@ function x = filterarray(v,filter,DIM)
         end
         if issparse(filter) && ~isa(v,'double')
             oldclass = class(v);
-            v = filter*reshape(double(v),s(1),[]);
+            
             switch oldclass
-                case 'logical', v(~isfinite(v)) = false;
+                case 'logical', v = double(v);
+                case 'categorical'
+                % PROVISIONAL: assign a random number to each category, hoping that combinations
+                % of two or more will just not yield another number on the list.
+                    iu = isundefined(v);
+                    [C,~,ia] = unique(v(~iu));
+                    X = rand(size(C));
+                    v = NaN(size(v));
+                    v(~iu) = X(ia);
+                otherwise
+                    v = double(v);
                 % others?
             end
-            v = cast(v,oldclass);
+            
+            v = filter*reshape(v,s(1),[]);
+            
+            switch oldclass
+                case 'logical', v = v > 0.5;
+                case 'categorical'
+                    [ia,ib] = ismembertol(v,X,eps(10));
+                    ib(~ia) = 1;
+                    v = C(ib);
+                    v(~ia) = categorical(NaN);
+                otherwise
+                    v = cast(v,oldclass);
+                % others?
+            end
         else
             v = filter*reshape(v,s(1),[]);
         end

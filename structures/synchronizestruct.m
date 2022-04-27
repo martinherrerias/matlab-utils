@@ -33,13 +33,13 @@ function varargout = synchronizestruct(varargin)
     x = -arrayfun(@(t) offset(t{1},dt,opt.offset),t); % units of new dt
     [T,t] = arrayfun(@resample,T,idx,t,m,x,'unif',0);
     
-    [t,idx{1},idx{2}] = intersect(t{1},t{2});
+    [tc,idx{1},idx{2}] = intersect(t{1},t{2});
     for j = 3:numel(T)
-        if isempty(t)
+        if isempty(tc)
             idx{j} = [];
             continue;
         end
-        [t,iA,idx{j}] = intersect(t,T{j}.Properties.RowTimes);
+        [tc,iA,idx{j}] = intersect(tc,t{j});
         idx(1:j-1) = cellfun(@(x) x(iA),idx(1:j-1),'unif',0);
     end
 
@@ -47,8 +47,10 @@ function varargout = synchronizestruct(varargin)
     for j = 1:nargout
         if isa(T{j},'MeteoData')
             varargout{j} = filterstructure(T{j},idx{j},T{j}.Nt);
+            varargout{j}.data.Properties.RowTimes = tc;
         else
             varargout{j} = T{j}(idx{j},:);
+            varargout{j}.Properties.RowTimes = tc;
         end
         if isempty(c{j}), continue; end
         varargout{j} = c{j}(varargout{j}); % convert back non-table outputs
@@ -69,9 +71,8 @@ function [X,t,dt,idx,C] = parsetable(X)
         X = timetable(X);
         C = @(x) x.Properties.RowTimes;
     elseif isa(X,'MeteoData')
-        if ~isregular(X.data)
-           X = MeteoData.loadobj(X); 
-        end
+        if ~isregular(X.data), X = checktimestamps(X); end
+        X.interval = 'b';
         t = X.t;
         dt = X.timestep;
         idx = (1:X.Nt)';
@@ -99,7 +100,10 @@ function [T,t] = resample(T,idx,t,m,offset)
     assert(size(T,1) == n);
 
     if isequal(m,1) && offset == 0
-        if isequal(idx(:)',1:n), return; end
+        if isequal(idx(:)',1:n)
+            t = parsetime(t,'-regular','interval','b');
+            return; 
+        end
         T = retime(T,t,'fillwithmissing');
         % T{idx,:} = T{:,:};
         % F = sparse(idx,1:n,1);
@@ -117,9 +121,11 @@ function [T,t] = resample(T,idx,t,m,offset)
         end
         [T,F] = resamplestructure(T,m,'offset',offset);
         
+        
         t0 = t(1);
-        t = t0 + F*days(t-t0);
-        t = parsetime(t,'-regular'); % resolve numerical precision errors
+        % t = t0 + F*days(t-t0);
+        t = resamplestructure(days(t-t0),m,'offset',offset) + t0;
+        t = parsetime(t,'-regular','interval','b'); % resolve numerical precision errors
         
         if isempty(T)
             T = timetable(t);
