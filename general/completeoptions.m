@@ -1,54 +1,50 @@
-function [options,fromdefaults] = completeoptions(options,defaults,varargin)
-% OPTIONS = COMPLETEOPTIONS(OPT,DEFAULTS) - Complete the options structure OPTIONS with default 
-%   values from structure DEFAULTS.
+function varargout = completeoptions(options,varargin)
+% OPTIONS = COMPLETEOPTIONS(OPT) - Complete the options structure OPT with default 
+%   values from existing global SimOptions, and from DEFAULTOPTIONS. This call will NOT change 
+%   the existing global SimOptions.
 %
-% [OPTIONS,FROMDEFAULTS] = COMPLETEOPTIONS(OPTIONS) - Use global SIMOPTIONS as the source of
-%   default options, after an equivalent COMPLETEOPTIONS(SIMOPTIONS,DEFAULTOPTIONS)
+% [OPTIONS,FLAGS,MSG] = COMPLETEOPTIONS(OPT) - return comparison with current defaults.
+%   FLAGS is boolean structure with the same fields as OPTIONS, where FLAGS.(FLD) = FALSE signals
+%   non-default option FLD. MSG is a comparison string of these custom settings.
 %
-% [OPTIONS,FROMDEFAULTS] = COMPLETEOPTIONS() - returns the set of current defaults, i.e. the
-%   result of COMPLETEOPTIONS(SIMOPTIONS,DEFAULTOPTIONS)
+% COMPLETEOPTIONS(OPT) - Set global SimOptions and OptionFlags to the resulting OPTIONS,FLAGS.
 %
-% FROMDEFAULTS has the same structure as OPTIONS, but contains boolean field values indicating if 
-%   any option OPTIONS.(j) comes from DEFAULTS.(j)
-%
-% See also: COMPLETESTRUCT
+% See also: COMPLETESTRUCT, GETSIMOPTION, SETSIMOPTION
 
     global SimOptions
     global OptionFlags
-    if isempty(SimOptions), SimOptions = struct(); OptionFlags = struct();
-    elseif isempty(OptionFlags), OptionFlags = struct(); end
+    % if isempty(SimOptions), SimOptions = struct(); end
     
     if nargin < 1 || isempty(options), options = struct(); end
-    if nargin < 2 || isempty(defaults) 
-    % Complete global SimOptions with defaults (e.g. resolve version compatibility issues)
+
+    options = completestruct(options,SimOptions,varargin{:});
     
-        % Remove obsolete options
-        [val,names] = nestedstruct2cell(SimOptions);
-        obsolete = ~isnestedfield(DefaultOptions(),names);
-        if any(obsolete)
-            warning('Removed obsolete %s',shortliststr(names(obsolete),'option'));
-            SimOptions = cell2nestedstruct(val(~obsolete),names(~obsolete));
-            
-            [val,names] = nestedstruct2cell(OptionFlags);
-            obsolete = ~isnestedfield(SimOptions,names);
-            OptionFlags = cell2nestedstruct(val(~obsolete),names(~obsolete));
-        end
-    
-        % Use defaults for any new options
-        [SimOptions, isnew] = completestruct(SimOptions,DefaultOptions(),varargin{:});
+    DEF = DefaultOptions();
         
-        % Update global OptionFlags
-        for f = nestedfieldnames(SimOptions)'
-            if isnestedfield(OptionFlags,f{1})
-                isdef = getnestedfield(OptionFlags,f{1});
-            else
-                isdef = getnestedfield(isnew,f{1});
-            end
-            OptionFlags = setnestedfield(OptionFlags,f{1},isdef);
-        end
-        
-        defaults = SimOptions;
+    % ... Remove obsolete options
+    [val,names] = nestedstruct2cell(options);
+    obsolete = ~isnestedfield(DEF,names);
+    if any(obsolete)
+        warning('Removed obsolete %s',shortliststr(names(obsolete),'option'));
+        options = cell2nestedstruct(val(~obsolete),names(~obsolete));
     end
 
-    [options, fromdefaults] = completestruct(options,defaults,varargin{:});
+    % ... Use defaults for any new options
+    options = completestruct(options,DEF,varargin{:});
+    
+    [custom,~,txt] = comparestruct(options,DEF);
+    
+    names = nestedfieldnames(options);
+    flags = cell2nestedstruct(repmat({true},numel(names),1),names);
+    nondef = nestedfieldnames(custom);
+    for j = 1:numel(nondef)
+        flags = setnestedfield(flags,nondef{j},false);
+    end
+    
+    if nargout == 0
+        SimOptions = options; 
+        OptionFlags = flags;
+    else
+        varargout = {options,flags,txt};
+    end
 end
