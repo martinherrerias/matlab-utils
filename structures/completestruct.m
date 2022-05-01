@@ -49,7 +49,7 @@ function [A,fromB] = completestruct(A,B,varargin)
         else
             validA = true(size(Aval));
         end
-        fromB = cell2nestedstruct(num2cell(false(nnz(validA),1)),Afields(validA,1));
+        if nargout > 1, fromB = cell2nestedstruct(num2cell(false(nnz(validA),1)),Afields(validA,1)); end
 
         AnotB = setdiff(Afields(validA),[Bfields(validB);implicitB]);
         
@@ -66,7 +66,7 @@ function [A,fromB] = completestruct(A,B,varargin)
             try
             % NOTE: if A.b is not a structure, it should not be removed to make place for B.b.c
                 A = setnestedfield(A,BnotA{j},Bval{ib(j)});
-                fromB = setnestedfield(fromB,BnotA{j},1);
+                if nargout > 1, fromB = setnestedfield(fromB,BnotA{j},1); end
             catch ERR
                 if ~strcmp(ERR.identifier,'setnestedfield:nostruct'), rethrow(ERR); end
                 conflicts(j) = true;
@@ -91,9 +91,9 @@ function [A,fromB] = completestruct(A,B,varargin)
             for j = 1:numel(AnotAB)
                 try
                     A = setnestedfield(A,AnotAB{j},Aval{ia(j)});
-                    fromB = setnestedfield(fromB,AnotAB{j},1);
+                    if nargout > 1, fromB = setnestedfield(fromB,AnotAB{j},1); end
                 catch ERR
-                    keyboard();
+                    error('You should not be here, call for help: %s',getReport(ERR));
                 end
             end
         end

@@ -1,15 +1,17 @@
-function X = mergestructures(S,idx,N,fillmissing)
-% X = MERGESTRUCTURES(X,FILTER) - opposite(*) of x = FILTERSTRUCTURE(X,FILTER)
-%   Place any data of x that has nnz(FILTER) rows into the FILTER rows of the matching field of X,
-%   so that, in general(*) x = FILTERSTRUCTURE(X,FILTER).
-%   In other words, for each field k in NESTEDFIELDNAMES(x): if size(x.k,1) == nnz(FILTER), make
-%   X.k(FILTER) = x.k. (where X.k can stand for a potentially nested field, e.g. X.b.c.d...).
-%
-% X = MERGESTRUCTURES(X,IDX,N) - place any data of x that has numel(IDX) rows into the IDX
-%   rows of the matching field of X. If N > max(IDX) is provided, then also make sure that all
-%   fields have N rows, filling the gaps with NaN.
+function X = mergestructures(varargin)
+% M = MERGESTRUCTURES(X,IDX,N) - outer join of structures X, treated as tables. Returns a merged
+%   structure M such that (*) X{j} = FILTERSTRUCTURE(M,IDX{j},N).
+%   X can be an cell array of dissimilar structures, or a regular structure array.
+%   Each field X{j}.(k) that has N rows is placed into the IDX{j} rows of the matching M.(k)
 %
 % X = MERGESTRUCTURES(X,x,IDX,N,'-fillmissing') - fill any gaps in FILTER/IDX with NaN
+%
+% X = MERGESTRUCTURES(X,FILTER) - works the same, with logical indices FILTER{j}.
+%
+% S = MERGESTRUCTURES(s,..) - if s is a scalar structure, FILTER and IDX need not be cell arrays.
+%   The result will be the inverse (*) of s = FILTERSTRUCTURE(S,..).
+%
+% X = MERGESTRUCTURES(A,B,C,..) treats all fields of structures A, B, C as non-separable (*).
 %
 % (*) NOTE: Unlike with FILTERSTRUCTURE, where non-separable fields are just cloned to the children
 % structure, MERGESTRUCTURES needs to find a way to cope with these fields to avoid loss of info:
@@ -28,27 +30,35 @@ function X = mergestructures(S,idx,N,fillmissing)
 %
 % See also: FILTERSTRUCTURE, NESTEDFIELDNAMES, AVGDOWNSAMPLE, REVERTFILTER
 
+    if nargin > 1 && (isstruct(varargin{2}) || isobject(varargin{2})), varargin = {varargin}; end
+    [varargin{end+1:4}] = deal([]);
+    [S,idx,N,fillmissing] = deal(varargin{:}); clear varargin;
+
     assert(iscell(S) || isstruct(S) || isobject(S),'Expecting array of structures/objects');
     m = numel(S);
 
-    if nargin < 3 || isempty(N), N = NaN; end
-    assert(isnumeric(N) && isscalar(N),'Expecting numeric scalar N');
+    if isempty(idx), idx = {}; end
+    if isempty(N), N = NaN; end
+    assert(isempty(idx) || (isnumeric(N) && isscalar(N)),'Expecting numeric scalar N');
     
-    if nargin > 3 && (strcmpi(fillmissing,'-fillmissing') || isequal(fillmissing,true))
+    if ~isempty(fillmissing) && (strcmpi(fillmissing,'-fillmissing') || isequal(fillmissing,true))
         fillmissing = true;
     else
         fillmissing = false; 
     end
         
-    if ~iscell(idx), idx = {idx}; end
-    assert(numel(idx) == m,'Number of indices must match number of parts');
-    if ~isequal(size(idx),size(S)), idx = idx(:); S = S(:); end
-    
-    % Parse all filters/indices, check for uniqueness and completeness
-    [idx,N,missing] = parseindices(idx,N);
-    
-    if ~fillmissing, missing(:) = false; end
-    
+    if ~isempty(idx)
+        if ~iscell(idx), idx = {idx}; end
+        assert(numel(idx) == m,'Number of indices must match number of parts');
+        if ~isequal(size(idx),size(S)), idx = idx(:); S = S(:); end
+
+        % Parse all filters/indices, check for uniqueness and completeness
+        [idx,N,missing] = parseindices(idx,N);
+        if ~fillmissing, missing(:) = false; end
+    else
+        missing = [];
+    end
+
     % Actual merging can start with a cell-array or a struct-like object, but both become
     % recursive (and might call each other) if contents require it.
     if iscell(S)
@@ -63,7 +73,7 @@ function V = mergearray(v,idx,N,missing,V)
     if nargin < 5, V = []; end
     m = numel(v);
     
-    divisible = all(arrayfun(@(x,n) size(x{1},1) == n,v,cellfun(@numel,idx)));
+    divisible = ~isempty(idx) && all(arrayfun(@(x,n) size(x{1},1) == n,v,cellfun(@numel,idx)));
     similar = allsimilar(v);
 
     if divisible && similar && ~ischar(v)
