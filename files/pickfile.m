@@ -37,7 +37,7 @@ function filenames = pickfile(pattern,varargin)
 % See also: DIR, UIGETFILE, RUNNINGFROMUI, WHICH
 
     narginchk(0,7);
-    [opt,remargs] = getflagoptions(varargin,{'-fullpath','-ui'});
+    [opt,remargs] = getflagoptions(varargin,{'-fullpath','-ui','-soft'});
     opt.ui = double(opt.ui);
     [opt,remargs] = getpairedoptions(remargs,opt);
     prompt = 'Select a file';
@@ -94,7 +94,7 @@ function filenames = pickfile(pattern,varargin)
     % Make sure filename is a cell-array of strings (just for now)
        if filenames == 0, filenames = {};  else, filenames = {filenames}; end
     end 
-    if numel(filenames) < n(1) || numel(filenames) > n(2)
+    if ~opt.soft && (numel(filenames) < n(1) || numel(filenames) > n(2))
     % Throw error if the result is not what we expected
         if n(2) > n(1), msg = sprintf('%d-%d files.',n(1),n(2)); 
         else, msg = nthings(n(1),'file'); 
