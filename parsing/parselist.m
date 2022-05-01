@@ -62,8 +62,8 @@ function [x,ix] = parselist(x,LIST,varargin)
         ix = (1:numel(tgt))';
         x = tgt;
         return;
-    elseif isempty(x), ix = []; return;
     elseif ischar(x), x = {x};
+    elseif isempty(x), ix = []; return;
     end
 
     assert(iscellstr(x) || isstring(x),'Expecting numeric, char, or cellstr %s list',stuffname);
