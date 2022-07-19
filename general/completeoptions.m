@@ -13,7 +13,7 @@ function varargout = completeoptions(options,varargin)
 
     global SimOptions
     global OptionFlags
-    % if isempty(SimOptions), SimOptions = struct(); end
+    if isempty(SimOptions), SimOptions = struct(); end
     
     if nargin < 1 || isempty(options), options = struct(); end
 

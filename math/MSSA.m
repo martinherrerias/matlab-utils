@@ -160,6 +160,7 @@ function [Xr,Sx,RC,L,opt] = MSSA(X,varargin)
     % % r = corr(F,X,'rows','pairwise');
 
     [C,V] = nanxcov(X,opt.lags,opt.periodic);
+    assert(~any(isnan(C),'all'),'Undefined covariance terms, signal might be flat or too short');
 
     [Q,L] = eig(C);
     L = diag(L);                  % extract the diagonal
