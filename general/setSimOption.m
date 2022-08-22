@@ -16,9 +16,4 @@ function setSimOption(fieldname,val)
     end
     SimOptions = setnestedfield(SimOptions,fieldname,val);
     OptionFlags = setnestedfield(OptionFlags,fieldname,0);  % Set flag to false (not default)
-    
-    % if ismember(fieldname,{'RelTol','minabstol','minreltol','NEPS','MaxIter'})
-    % % Overwrite SimOption.xml file if any of its options are modified
-    %     writeSimOptionXML(true);
-    % end
 end

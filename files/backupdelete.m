@@ -6,7 +6,7 @@ function varargout = backupdelete(filename,varargin)
 %   b) PATH/FILE.EXT --> PATH/FILE_EXT.bak                      if  RECYCLE() == 'off'
 %   c) .../FILE.EXT --> .../FILE_EXT_CPUTIME.bak  if either of the above matches an existing file
 %
-% See also: DELETE, RECYCLE, TEMPDIR
+% See also: UNIQUEFILENAME, DELETE, RECYCLE, TEMPDIR
 
     [opt,varargin] = getflagoptions(varargin,{'-warning'});
     opt.suffixes{1} = '.bak';

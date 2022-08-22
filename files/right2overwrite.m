@@ -6,7 +6,9 @@ function [doit,msginfo,reallyasked] = right2overwrite(filename,forceoverwrite)
 %   doit: boolean result, true means user agreed to overwrite file (or forceoverwrite is true)
 %   reallyasked: boolean flag, used to avoid asking repeatedly for several files.
 %   msginfo: user feedbak string.
- 
+%
+% See also: BACKUPDELETE
+
     if nargin < 2, forceoverwrite = false; end
     
     doit = true;
