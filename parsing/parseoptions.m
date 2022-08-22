@@ -3,9 +3,16 @@ function [par,rem,isdef] = parseoptions(args,flags,varargin)
 %   followed by GETPAIREDOPTIONS. Collects all flags, and name-value pairs in structure PAR,
 %   any remaining arguments in REM.
 %
-%   Flags take precedence over name-value pairs, i.e. for arguments {..,'-flag','flag',0,..},
-%   the result will be PAR.flag = 1.
+% NOTES:
+%   (§) Flags take precedence over name-value pairs, i.e. for arguments {..,'-flag','flag',0,..},
+%       the result will be PAR.flag = 1.
+%   ($) Positional argument order (for use with 'dealrest' option of GETPAIREDOPTIONS) takes 
+%       name-value pairs first, then flags.
 %
+% EXAMPLES:
+%   parseoptions({'-foo','bam',3},{'-foo','-bar'},{'bam'})
+%   parseoptions({3,1,0},{'-foo','-bar'},{'bam'},'dealrest') % see note ($)
+% 
 % See also: GETPAIREDOPTIONS, GETFLAGOPTIONS
 
     if isempty(flags)
@@ -36,10 +43,12 @@ function [par,rem,isdef] = parseoptions(args,flags,varargin)
     end
     [par,rem,isdef] = getpairedoptions(args,varargin{:});
     
+    % merge parameter-pair and flag options
     for j = 1:numel(fld)
-       if ~isfield(par,fld{j}) || isempty(par.(fld{j})) || ~par.(fld{j})
+       if ~isfield(opt,fld{j}), continue; end
+       if ~isfield(par,fld{j}) || isempty(par.(fld{j})) || isequal(par.(fld{j}),false)
            par.(fld{j}) = opt.(fld{j});
-           isdef.(fld{j}) = false;
+           isdef.(fld{j}) = ~opt.(fld{j});
        end
     end
 end
