@@ -19,7 +19,7 @@ function varargout = getgeotiff(lat,lon,varargin)
     
     [tilekeys,url,c] = demrastertiles(lat,lon,R,opt.thresh);
 
-    findfiles = @(K) cellfun(@(k) dir(['*' k '*.tif']),K,'unif',0);
+    findfiles = @(K) cellfun(@(k) pickfile(['*' k '*.tif'],[0,1]),K,'unif',0);
 
     % Check if files for those tiles are already available
     files = findfiles(tilekeys);
@@ -63,7 +63,7 @@ function varargout = getgeotiff(lat,lon,varargin)
     end
     files = files(~missing);
     
-    g = cellfun(@(f) geotiffread(fullfile(f.folder,f.name)),files);
+    g = cellfun(@geotiffread,files);
     
     % Merge all tiles into a single image G
     [x,~,ix] = unique([g.x]);
@@ -103,8 +103,8 @@ function [K,URL,c] = demrastertiles(lat,lon,radius,thresh)
     
     URL = 'https://search.earthdata.nasa.gov/search?q=ASTER';
     URL = [URL, sprintf('&circle[0]=%0.6f%%2C%0.6f%%2C%d',lon,lat,radius)];
-    URL = [URL, sprintf('&m=%f!%f!',lat,lon),'7!1!0!0%2C2'];
-    
+    URL = [URL, sprintf('&lat=%f&long=%f&zoom=7',lat,lon)];
+        
     % Custom (project-centered) Transverse-Mercator Projection
     % UTM_PRJ = round([lat,lon,0,0],3);
     % [x0,y0,UTM_PRJ] = deg2utm(lat,lon,UTM_PRJ);
