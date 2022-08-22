@@ -48,6 +48,10 @@ function [xc,yc] = proj(prj4,x,y)
         cmd = sprintf('proj -f "%%.3f" -e "NaN\tNaN" ');
         fmt = '%0.8f %0.8f\n';
     end
+
+        % PROVISIONAL: avoid error with conflicting MATLAB libraries
+        PREFIX = 'env LD_LIBRARY_PATH='''' ';
+        cmd = [PREFIX, cmd];
     
     sz = size(x);
     if ~isvector(x) || size(x,2) > 1, x = x(:); y = y(:); end
