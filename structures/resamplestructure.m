@@ -71,6 +71,12 @@ function [B,F] = resamplestructure(A,m,varargin)
     else
         if isnumeric(A) || isdatetime(A) || isa(A,'tabular') || ...
                 (isobject(A) && ismethod(A,'filterstructure'))
+            
+            if q > 1 && ((isa(A,'timetable') && ~isregular(A)) || ...
+               (isa(A,'table_ish') && isa(A.data,'timetable') && ~isregular(A.data)))
+                warning('Downsampling an irregular timetable')
+            end
+            
             N = size(A,1);
         else
             N = cellfun(@(f) size(getnestedfield(A,f),1),nestedfieldnames(A));

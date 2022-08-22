@@ -114,14 +114,18 @@ function [T,t] = resample(T,idx,t,m,offset)
             msg = sprintf('%s %s by %d:%d',msg,inputname(1),p,q);
             m = [p,q];
         else
+            q = 1;
             msg = sprintf('Offseting %s (1/1 resample)',inputname(1));
         end
         if offset ~= 0
             msg = sprintf('%s, %0.2g step offset',msg,offset);
         end
+        if q > 1 && ~isequal(idx(:)',1:n)
+        % ensure regular time scale before downscaling
+            T = retime(T,t,'fillwithmissing');
+        end
         [T,F] = resamplestructure(T,m,'offset',offset);
-        
-        
+             
         t0 = t(1);
         % t = t0 + F*days(t-t0);
         t = resamplestructure(days(t-t0),m,'offset',offset) + t0;
