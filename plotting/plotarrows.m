@@ -11,7 +11,7 @@ function varargout = plotarrows(varargin)
     
     used = false(size(varargin));
     for j = 1:numel(varargin)
-       if ~used(1) && ishandle(varargin{j}) && isa(varargin{j},'matlab.graphics.axis.Axes')
+       if ~used(1) && isa(varargin{j},'matlab.graphics.axis.Axes') && ishandle(varargin{j})
            ax = varargin{j}; used(1) = true;
        elseif ~used(2) && ischar(varargin{j}), pos = varargin{j}; used(2) = true;
        elseif ~used(3) && isnumeric(s) && isscalar(s), s = varargin{j}; used(3) = true;

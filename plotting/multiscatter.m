@@ -103,9 +103,9 @@ if OPT.errors
     X(~f) = NaN;
     Y(~f) = NaN;
 
-    % AVG = mean(X,1,'omitnan');
-    MBE = mean(Y-X,1,'omitnan'); % ./AVG;
-    STD = std(Y-X,1,'omitnan'); % ./AVG;
+    AVG = mean(X,1,'omitnan');
+    MBE = mean(Y-X,1,'omitnan')./AVG;
+    STD = std(Y-X,1,'omitnan')./AVG;
 end
 
 if ~iscell(OPT.xlabel) || (isscalar(OPT.xlabel) && M > 1), OPT.xlabel = repmat({OPT.xlabel},1,M); end
@@ -181,7 +181,7 @@ for i = 1:MN
         end
 
         if OPT.errors
-            text(H(j),0,OPT.limits(2),sprintf('\n  STD:%0.2f%%\n  MBE:%0.2f%%\n',STD(j)*100,MBE(j)*100),...
+            text(H(j),0,OPT.limits(2),sprintf('\n nSTD:%0.2f%%\n nMBE:%0.2f%%\n',STD(j)*100,MBE(j)*100),...
                                                     'fontsize',10,'verticalalignment','top');
         end
     end

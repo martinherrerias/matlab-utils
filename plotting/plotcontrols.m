@@ -101,9 +101,20 @@ function varargout = plotcontrols(types,labels,ranges,values,updatefcn,varargin)
             end
             L = uicontrol(opt.parent,'style','popupmenu','string',range,'value',value,...
                 'units','normalized','position',pos(1,:),'fontsize',opt.fontsize);
-            
-        % case {'togglebutton','checkbox','radiobutton','edit','text','listbox'}
-        
+
+        case {'text'}
+                        
+            if ischar(value)
+                [~,value] = ismember(value,range);
+                if opt.listvalues, X{j} = value; end
+            else
+                if ~opt.listvalues, X{j} = range(value); end 
+            end
+            L = uicontrol(opt.parent,'style','text','string',value,...
+                'units','normalized','position',pos(1,:),'fontsize',opt.fontsize,...
+                'HorizontalAlignment','left');
+                
+        % case {'togglebutton','checkbox','radiobutton','edit','listbox'}
         otherwise
             
             error('plotcontrol currently only works with sliders and pop-up menus');
@@ -113,14 +124,11 @@ function varargout = plotcontrols(types,labels,ranges,values,updatefcn,varargin)
         L.UserData.range = range;
         L.Callback = @callback;
         
-        L.UserData.txtbox = annotation(opt.parent,'textbox','units','normalized','position',pos(2,:),...
-            'margin',0,'EdgeColor','none','String',label,'verticalalignment','bottom',...
-            'fontsize',opt.fontsize);
-%          L.UserData.txtbox = uicontrol(ax.Parent,'textbox','units','normalized','position',pos(2,:),...
-%             'margin',0,'EdgeColor','none','String',label,'verticalalignment','bottom',...
-%             'fontsize',opt.fontsize);
-
-        
+        if ~strcmp(L.Style,'text')
+            L.UserData.txtbox = annotation(opt.parent,'textbox','units','normalized','position',pos(2,:),...
+                'margin',0,'EdgeColor','none','String',label,'verticalalignment','bottom',...
+                'fontsize',opt.fontsize);
+        end
     end
 
     function callback(L,event)
@@ -148,6 +156,7 @@ function varargout = plotcontrols(types,labels,ranges,values,updatefcn,varargin)
             end
             if ~dostuff, return; end
             X{k} = v;
+        case {'text'}
         otherwise
             error('you should not be here')
         end
