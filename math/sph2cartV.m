@@ -10,5 +10,8 @@ function s = sph2cartV(az,el)
     az = double(az);
     el = double(el);
     
-    s = [cosd(az).*cosd(el),sind(az).*cosd(el),sind(el)];
+    z = sind(el);
+    if isscalar(z) && numel(az) > 1, z = repelem(z,numel(az),1); end
+    
+    s = [cosd(az).*cosd(el),sind(az).*cosd(el),z];
 end

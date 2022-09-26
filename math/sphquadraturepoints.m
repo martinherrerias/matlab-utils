@@ -33,8 +33,12 @@ function [X,W,T] = sphquadraturepoints(N)
     end
 
     % Start with 2+10*4^Z vertices (with icosahedral symmetry)
-    P = spherepoints(N+2,'regular',true);
+    P = spherepoints(N+2,'regular',true,'symmetric',true);
     
+    % solve numerical precission issue near XY plane
+    TINY = 1e-6*N.^(-0.5);
+    P(abs(P(:,3)) < TINY,3) = 0;
+     
     % Triangulate, and keep the upper half
     P = sortrows(P,3,'descend');
     T = convhull(P);
@@ -51,5 +55,28 @@ function [X,W,T] = sphquadraturepoints(N)
         (1+dot(P(:,:,1),P(:,:,2),2)+dot(P(:,:,2),P(:,:,3),2)+dot(P(:,:,1),P(:,:,3),2)));
     W = single(W);
     
+    % a = vectorangles(P(:,:,1),P(:,:,2));
+    % b = vectorangles(P(:,:,2),P(:,:,3));
+    % c = vectorangles(P(:,:,1),P(:,:,3));
+    % W = huilier(a,b,c);
+    
     save(file,'X','W','T');
 end
+
+% function a = vectorangles(x,y)
+% % W. Kahan, 2006. "How Futile are Mindless Assessments of Roundoff in Floating-Point Computation?"
+% % https://people.eecs.berkeley.edu/~wkahan/Mindless.pdf    
+% 
+%     x = x./vecnorm(x,2,2);
+%     y = y./vecnorm(y,2,2);
+%     a = 2 * atan2(vecnorm(x - y,2,2) , vecnorm(x + y,2,2));
+% end
+% 
+% function A = huilier(a,b,c)
+% % https://en.wikipedia.org/wiki/Spherical_trigonometry#Area_and_spherical_excess
+%     a = 0.5*a;
+%     b = 0.5*b;
+%     c = 0.5*c;
+%     s = 0.5*(a + b + c);
+%     A = 4*atan(sqrt(tan(s).*tan(s-a).*tan(s-b).*tan(s-c)));
+% end

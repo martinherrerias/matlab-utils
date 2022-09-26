@@ -93,7 +93,7 @@ function fh = GUIfigure(varargin)
     if isfield(fighandles,key), fh = fighandles.(key); else, fh = NaN; end
     
     if isgraphics(fh) && isa(fh,'matlab.ui.Figure')
-        figureexisted = true;
+        figureexisted = true; 
         if ~opt.silent, fh = figure(fh); end
     else
         if ~opt.silent, fh = figure(); end

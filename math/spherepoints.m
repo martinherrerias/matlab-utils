@@ -142,34 +142,34 @@ end
 
 function n = regular(N)
     switch N
-        case 2, n = [0,0,1;0,0,-1];                             % 2 poles
-        case 4, n = multisensor(0,0,120,[0 120 240])';          % tetrahedral
-        case 6, n = [0,0,1;0,1,0;1,0,0;-1,0,0;0,-1,0;0,0,-1];   % octahedral vertices
-        case 8, n = multisensor(45,0:90:270,135,0:90:270)';     % cube vertices
-        case 12                                                 % icosahedral vertices
-            a = atand(2);
-            w = (0:4)*72;
-            n = multisensor(0,0,a,w,180-a,w+36,180,0)';         
-        case 20                                                 % dodecahedral vertices
+    case 2, n = [0,0,1;0,0,-1];                             % 2 poles
+    case 4, n = multisensor(0,0,120,[0 120 240])';          % tetrahedral
+    case 6, n = [0,0,1;0,1,0;1,0,0;-1,0,0;0,-1,0;0,0,-1];   % octahedral vertices
+    case 8, n = multisensor(45,0:90:270,135,0:90:270)';     % cube vertices
+    case 12                                                 % icosahedral vertices
+        a = atand(2);
+        w = (0:4)*72;
+        n = multisensor(0,0,a,w,180-a,w+36,180,0)';         
+    case 20                                                 % dodecahedral vertices
+        n = regular(12);
+        TR = triangulation(convhull(n),n);
+        n = TR.circumcenter;
+        n = n./rssq(n,2);
+    case 32
+        n = [regular(12);regular(20)];
+    otherwise
+        M = log((N-2)/10)/log(4);
+        if N >= 42 && mod(M,1) == 0                         % recursively divided icosahedron
             n = regular(12);
-            TR = triangulation(convhull(n),n);
-            n = TR.circumcenter;
-            n = n./rssq(n,2);
-        case 32
-            n = [regular(12);regular(20)];
-        otherwise
-            M = log((N-2)/10)/log(4);
-            if N >= 42 && mod(M,1) == 0                         % recursively divided icosahedron
-                n = regular(12);
-                for j = 1:M
-                    T = convhull(n);
-                    TR = triangulation(T,n);
-                    E = TR.edges;
-                    m = (n(E(:,1),:) + n(E(:,2),:))/2;  % add edge middle-points
-                    n = [n;m./rssq(m,2)]; %#ok 
-                end
-                return
+            for j = 1:M
+                T = convhull(n);
+                TR = triangulation(T,n);
+                E = TR.edges;
+                m = (n(E(:,1),:) + n(E(:,2),:))/2;  % add edge middle-points
+                n = [n;m./rssq(m,2)]; %#ok 
             end
-        error('Unknown regular distribution');
+        else
+            error('Unknown regular distribution');
+        end
     end
 end
