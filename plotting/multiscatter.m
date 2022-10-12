@@ -56,6 +56,7 @@ assert(MN <= M*N);
 
 % Set defaults
 OPT.errors = true;
+OPT.units = '%';
 OPT.symmetric = true;
 OPT.xlabel = 'X';
 OPT.ylabel = 'Y';
@@ -103,9 +104,18 @@ if OPT.errors
     X(~f) = NaN;
     Y(~f) = NaN;
 
-    AVG = mean(X,1,'omitnan');
-    MBE = mean(Y-X,1,'omitnan')./AVG;
-    STD = std(Y-X,1,'omitnan')./AVG;
+    MBE = mean(Y-X,1,'omitnan');
+    STD = std(Y-X,1,'omitnan');
+    OPT.units = strtrim(OPT.units);
+    if OPT.units == '%'
+        AVG = mean(X,1,'omitnan');
+        MBE = MBE./AVG*100;
+        STD = STD./AVG*100;
+        tags = {'nMBE','nSTD'};
+    else
+        OPT.units = [' ' OPT.units];
+        tags = {'MBE','STD'};
+    end
 end
 
 if ~iscell(OPT.xlabel) || (isscalar(OPT.xlabel) && M > 1), OPT.xlabel = repmat({OPT.xlabel},1,M); end
@@ -181,8 +191,8 @@ for i = 1:MN
         end
 
         if OPT.errors
-            text(H(j),0,OPT.limits(2),sprintf('\n nSTD:%0.2f%%\n nMBE:%0.2f%%\n',STD(j)*100,MBE(j)*100),...
-                                                    'fontsize',10,'verticalalignment','top');
+            txt = sprintf('\n %s: %0.2f%s\n %s: %0.2f%s\n',tags{2},STD(j),OPT.units,tags{1},MBE(j),OPT.units);
+            text(H(j),0,OPT.limits(2),txt,'fontsize',10,'verticalalignment','top');
         end
     end
     
