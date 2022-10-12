@@ -56,6 +56,7 @@ function varargout = densityplot(x,y,varargin)
     idx = isfinite(x) & isfinite(y);
     x = double(x(idx));
     y = double(y(idx));
+    if numel(s) == numel(idx), s = s(idx); end
     
     if isscalar(opt.resolution), opt.resolution(2) = opt.resolution; end
     if isempty(opt.limits)
