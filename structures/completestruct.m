@@ -10,14 +10,11 @@ function [A,fromB] = completestruct(A,B,varargin)
 %
 % See also: GETSIMOPTIONS, GETNESTEDFIELD, SETNESTEDFIELD
 
-    opt = getpairedoptions(varargin,{'warning','valid'},'restchk');
-    if ~isfield(opt,'warning'), opt.warning = ''; end
-    if isfield(opt,'valid')
+    opt = getpairedoptions(varargin,{'warning','valid','nested'},{'',[],true},'restchk');
+    if ~isempty(opt.valid)
         validateattributes(opt.valid,{'function_handle'},{'nonempty'});
-        validfcn = opt.valid;
-    else
-        validfcn = [];
     end
+    validfcn = opt.valid;
 
     switch lower(opt.warning)
         case {'a>b','b<a','anotinb'}, warnif.AnotinB = true; warnif.BnotinA = false;
@@ -28,7 +25,11 @@ function [A,fromB] = completestruct(A,B,varargin)
             error('Unknown warning type: %s',opt.warning);
     end
     
-    [Bval,Bfields,implicitB] = nestedstruct2cell(B);
+    if opt.nested
+        [Bval,Bfields,implicitB] = nestedstruct2cell(B);
+    else
+        [Bval,Bfields,implicitB] = deal(struct2cell(B),fieldnames(B),{});
+    end
     if ~isempty(validfcn)
         validB = cellfun(validfcn,Bval);
     else
@@ -42,7 +43,11 @@ function [A,fromB] = completestruct(A,B,varargin)
         % end
         if nargout > 1, fromB = cell2nestedstruct(num2cell(true(numel(Bfields),1)),Bfields); end
     else
-        [Aval,Afields,implicitA] = nestedstruct2cell(A);
+        if opt.nested
+            [Aval,Afields,implicitA] = nestedstruct2cell(A);
+        else
+            [Aval,Afields,implicitA] = deal(struct2cell(A),fieldnames(A),{});
+        end
         if ~isempty(validfcn)
             validA = cellfun(validfcn,Aval);
             A = cell2nestedstruct(Aval(validA),Afields(validA));
