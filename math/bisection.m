@@ -71,7 +71,7 @@ function [p,bounded,fevals] = bisection(f,a,b,varargin)
     %     end
     % end
 
-    if any(notbounded)
+    if any(notbounded) && nargout < 2
         warning('bisection:notbounded','At least one root is not included in provided interval');
     end
     

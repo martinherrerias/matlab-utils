@@ -13,7 +13,7 @@ function varargout = multiscatter(X,Y,N,M,varargin)
 %       If the number of columns SIZE(X,2) > M*N, the rest will be ignored.
 %   
 %   ..,'limits',[XLO,XHI,YLO,YHI] - Axis limits. Default is min/max for all data.
-%   ..,'titles',C - provide an (X,2) cellstring of titles for each SUBPLOT
+%   ..,'titles',C - provide a size(X,2) cellstring of titles, one for for each SUBPLOT
 %   ..,'xlabel',A,'ylabel',B,'grid','on','size',S,'filled',F,.. - have their usual meaning. The
 %       only difference is they will be set equal for all subplots.
 %   ..,'oversize',[1.2 1.2] - Multiplies axes dimensions [W,H] to reduce margins between tiles.

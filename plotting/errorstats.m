@@ -21,7 +21,7 @@ function varargout = errorstats(x,varargin)
     opt.units = '';
     opt.format = '%0.2f';
     
-    [opt,~,isdef] = getpairedoptions(varargin,opt,'dealrest',2);
+    [opt,~,isdef] = parseoptions(varargin,{'omitnan'},opt,'dealrest',2);
     validateattributes(x,'numeric',{'vector','real'});
     if isempty(opt.y), y = 0;
     else
@@ -32,6 +32,15 @@ function varargout = errorstats(x,varargin)
             validateattributes(y,'numeric',{'vector','real','size',size(x)});
         end
     end
+    e = x-y;
+    if opt.omitnan
+        f = ~isnan(e);
+        if ~all(f)
+            x = x(f);
+            e = e(f);
+        end
+    end
+    
     if isa(opt.norm,'function_handle')
         n = opt.norm(x);
         if isdef.tags, opt.tags = cellfun(@(x) ['n' x],opt.tags,'unif',0); end
@@ -43,7 +52,6 @@ function varargout = errorstats(x,varargin)
         validateattributes(n,'numeric',{'vector','real','size',size(x)});
     end
 
-    e = x-y;
     if nargin < 3, n = 1; end
     
     MBE = mean(e)./n;
